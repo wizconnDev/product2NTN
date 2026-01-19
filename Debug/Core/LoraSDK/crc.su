@@ -1,0 +1,2 @@
+../Core/LoraSDK/crc.c:4:10:ComputeCrc	32	static
+../Core/LoraSDK/crc.c:25:10:RadioComputeCRC	32	static

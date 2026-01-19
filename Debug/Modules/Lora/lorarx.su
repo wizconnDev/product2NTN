@@ -1,0 +1,6 @@
+../Modules/Lora/lorarx.c:14:6:LoraRx_IrqNotify	8	static
+../Modules/Lora/lorarx.c:19:13:OnRxDone	48	static
+../Modules/Lora/lorarx.c:43:13:OnRxTimeout	8	static
+../Modules/Lora/lorarx.c:49:13:OnRxError	8	static
+../Modules/Lora/lorarx.c:56:6:LoraRx_Init	56	static
+../Modules/Lora/lorarx.c:92:6:LoraRx_Process	8	static
