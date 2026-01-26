@@ -1,4 +1,5 @@
 Modules/Lora/lorarx.o: ../Modules/Lora/lorarx.c ../Modules/Lora/lorarx.h \
+ D:/STNewProduct/productNTN/Modules/ExtFlash/lora_cfg.h \
  D:/STNewProduct/productNTN/Core/LoraSDK/radio.h \
  D:/STNewProduct/productNTN/Core/LoraSDK/sx126x.h \
  D:/STNewProduct/productNTN/Modules/toNTN/toNTN.h ../Core/Inc/main.h \
@@ -32,6 +33,7 @@ Modules/Lora/lorarx.o: ../Modules/Lora/lorarx.c ../Modules/Lora/lorarx.h \
  ../Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_uart.h \
  ../Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_uart_ex.h
 ../Modules/Lora/lorarx.h:
+D:/STNewProduct/productNTN/Modules/ExtFlash/lora_cfg.h:
 D:/STNewProduct/productNTN/Core/LoraSDK/radio.h:
 D:/STNewProduct/productNTN/Core/LoraSDK/sx126x.h:
 D:/STNewProduct/productNTN/Modules/toNTN/toNTN.h:

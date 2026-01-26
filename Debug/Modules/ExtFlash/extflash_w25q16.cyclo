@@ -1,0 +1,11 @@
+../Modules/ExtFlash/extflash_w25q16.c:20:20:CS_L	1
+../Modules/ExtFlash/extflash_w25q16.c:21:20:CS_H	1
+../Modules/ExtFlash/extflash_w25q16.c:23:6:ExtFlash_Init	1
+../Modules/ExtFlash/extflash_w25q16.c:40:9:ExtFlash_ReadSR1	1
+../Modules/ExtFlash/extflash_w25q16.c:52:12:WriteEnable	2
+../Modules/ExtFlash/extflash_w25q16.c:64:5:ExtFlash_WaitReady	3
+../Modules/ExtFlash/extflash_w25q16.c:77:5:ExtFlash_ReadJedecId	3
+../Modules/ExtFlash/extflash_w25q16.c:93:5:ExtFlash_Read	3
+../Modules/ExtFlash/extflash_w25q16.c:108:5:ExtFlash_Erase4K	5
+../Modules/ExtFlash/extflash_w25q16.c:127:12:PageProgram	7
+../Modules/ExtFlash/extflash_w25q16.c:147:5:ExtFlash_Write	4

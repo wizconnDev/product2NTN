@@ -1,0 +1,5 @@
+../Modules/ExtFlash/lora_cfg.c:9:6:LoraCfg_SetDefault	16	static
+../Modules/ExtFlash/lora_cfg.c:30:6:LoraCfg_Load	24	static
+../Modules/ExtFlash/lora_cfg.c:41:5:LoraCfg_Validate	32	static
+../Modules/ExtFlash/lora_cfg.c:56:5:LoraCfg_Save	64	static
+../Modules/ExtFlash/lora_cfg.c:84:19:LoraCfg_Get	8	static

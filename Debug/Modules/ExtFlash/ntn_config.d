@@ -1,4 +1,5 @@
-Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
+Modules/ExtFlash/ntn_config.o: ../Modules/ExtFlash/ntn_config.c \
+ ../Modules/ExtFlash/ntn_config.h ../Modules/ExtFlash/extflash_w25q16.h \
  ../Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal.h \
  ../Core/Inc/stm32l0xx_hal_conf.h \
  ../Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_rcc.h \
@@ -28,13 +29,10 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_spi.h \
  ../Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_uart.h \
  ../Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_uart_ex.h \
- ../Core/Inc/usart.h ../Core/Inc/main.h ../Core/Inc/spi.h \
- ../Core/Inc/gpio.h D:/STNewProduct/productNTN/Modules/toNTN/toNTN.h \
- D:/STNewProduct/productNTN/Modules/RS485/rs485.h \
- D:/STNewProduct/productNTN/Modules/Lora/lorarx.h \
- D:/STNewProduct/productNTN/Modules/ExtFlash/lora_cfg.h \
- D:/STNewProduct/productNTN/Modules/ExtFlash/ntn_config.h
-../Core/Inc/main.h:
+ ../Modules/ExtFlash/crc16_ccitt.h ../Modules/ExtFlash/lora_cfg.h \
+ ../Core/Inc/spi.h ../Core/Inc/main.h ../Core/Inc/gpio.h
+../Modules/ExtFlash/ntn_config.h:
+../Modules/ExtFlash/extflash_w25q16.h:
 ../Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal.h:
 ../Core/Inc/stm32l0xx_hal_conf.h:
 ../Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_rcc.h:
@@ -64,12 +62,8 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_spi.h:
 ../Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_uart.h:
 ../Drivers/STM32L0xx_HAL_Driver/Inc/stm32l0xx_hal_uart_ex.h:
-../Core/Inc/usart.h:
-../Core/Inc/main.h:
+../Modules/ExtFlash/crc16_ccitt.h:
+../Modules/ExtFlash/lora_cfg.h:
 ../Core/Inc/spi.h:
+../Core/Inc/main.h:
 ../Core/Inc/gpio.h:
-D:/STNewProduct/productNTN/Modules/toNTN/toNTN.h:
-D:/STNewProduct/productNTN/Modules/RS485/rs485.h:
-D:/STNewProduct/productNTN/Modules/Lora/lorarx.h:
-D:/STNewProduct/productNTN/Modules/ExtFlash/lora_cfg.h:
-D:/STNewProduct/productNTN/Modules/ExtFlash/ntn_config.h:

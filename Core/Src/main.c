@@ -31,6 +31,11 @@
 #include "rs485.h"
 #include "lorarx.h"     // ⭐ 新增：声明 loraSPI_ReceiveLoop / Lora_SimulateRxTestOnce
 
+#include "ntn_config.h"
+#include "usart.h"
+
+
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -69,8 +74,6 @@ static volatile uint32_t g_last_poweron_tick = 0;
 
 volatile uint8_t g_lora_irq = 0;
 
-static char rx_str[128];
-
 
 // ✅ POWERON 按行检测用（避免 strstr 全缓冲导致反复命中）
 static char     ntn_line[128];
@@ -86,6 +89,30 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+//波特率配置被成功写入硬件并生效//
+void NTN_Config_OnSaved(const NtnConfig *cfg)
+{
+    // 只处理 RS485 USART2（安全）
+    if (cfg->rs485_baud != 0 && huart2.Init.BaudRate != cfg->rs485_baud)
+    {
+        // 停掉正在进行的接收（更稳）
+        HAL_UART_AbortReceive(&huart2);
+
+        // 重新初始化 UART2
+        HAL_UART_DeInit(&huart2);
+        huart2.Init.BaudRate = cfg->rs485_baud;
+        HAL_UART_Init(&huart2);
+
+        // 重新启动 1-byte IT 接收
+        RS485_UART_Init();
+
+        // 可选：打印确认
+        char buf[64];
+        int n = snprintf(buf, sizeof(buf), "[CFG] RS485 baud applied: %lu\r\n",
+                         (unsigned long)cfg->rs485_baud);
+        HAL_UART_Transmit(&hlpuart1, (uint8_t*)buf, n, 200);
+    }
+}
 
 /* USER CODE END 0 */
 
@@ -124,7 +151,7 @@ int main(void)
   MX_SPI1_Init();
   MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
-
+  NTN_Config_Init();
  HAL_UART_Receive_IT(&hlpuart1, &lpuart_rx, 1); // PC
   HAL_UART_Receive_IT(&huart1,   &ntn_rx,  1); // NTN
 
@@ -147,15 +174,13 @@ int main(void)
   uint32_t next_try_tick = HAL_GetTick() + 10000;
   uint32_t last_tick = 0;
 
-  // （可选）只发送一次 READY TEST
- static int ready_test_sent = 0;
+
   while (1)
   {
 
 	  // 1) LoRa 永远处理（保证接收、回调、入队不断）
 	      LoraRx_Process();
 
-	      // A) PC -> NTN 透传（按行发送）
 	      if (pc_cmd_ready)
 	      {
 	          __disable_irq();
@@ -164,13 +189,38 @@ int main(void)
 	          pc_cmd_ready = 0;
 	          __enable_irq();
 
-	          char b[64];
-	          int n = snprintf(b, sizeof(b), "[PT] send to NTN len=%u\r\n", len);
-	          HAL_UART_Transmit(&hlpuart1, (uint8_t*)b, n, 100);
-
 	          if (len > 0)
-	              HAL_UART_Transmit(&huart1, pc_cmd_buf, len, 1000);
+	          {
+	              if (len >= sizeof(pc_cmd_buf)) len = sizeof(pc_cmd_buf) - 1;
+	              pc_cmd_buf[len] = 0;
+
+	              int consumed = 0;
+
+	              // 只拦截配置命令（白名单）
+	              if (!strncasecmp((char*)pc_cmd_buf, "AT+NTNCFG", 9) ||
+	                  !strncasecmp((char*)pc_cmd_buf, "NTNCFG", 5))
+	              {
+	                  int r = NTN_Config_ProcessLine((const char*)pc_cmd_buf);
+
+	                  if (r != 0)
+	                  {
+	                      consumed = 1;
+	                      const char *resp = (r > 0) ? "OK\r\n" : "ERROR\r\n";
+	                      HAL_UART_Transmit(&hlpuart1, (uint8_t*)resp, strlen(resp), 200);
+	                  }
+	              }
+
+	              // 没被本地命令消费掉，才透传给 NTN
+	              if (!consumed)
+	              {
+	                  char b[64];
+	                  int n = snprintf(b, sizeof(b), "[PT] send to NTN len=%u\r\n", len);
+	                  HAL_UART_Transmit(&hlpuart1, (uint8_t*)b, n, 200);
+	                  HAL_UART_Transmit(&huart1, pc_cmd_buf, len, 1000);
+	              }
+	          }
 	      }
+
 
 
 	      // 2) 稳定窗口：只阻挡 NTN 自动流程，不阻挡 LoRa
@@ -193,7 +243,7 @@ int main(void)
 	 	     {
 	 	         g_ntn_cfg_ready  = 0;
 	 	         g_ntn_hello_done = 0;
-	 	         ready_test_sent  = 0;
+
 
 	 	         NTN_SendTest();   // 阻塞拉 cfg
 
@@ -283,8 +333,11 @@ int main(void)
 	      if (!wind_active && now - last_tick >= 2000)
 	      {
 	          RS485_WindQuery_Start();
+
 	          last_tick = now;
 	      }
+	        RS485_WindQuery_Poll();
+
 
 	      // F) READY 后 flush LoRa 队列（节流）
 	      static uint32_t last_flush = 0;
@@ -330,10 +383,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLLMUL_3;
-  RCC_OscInitStruct.PLL.PLLDIV = RCC_PLLDIV_2;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -343,12 +393,12 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
   {
     Error_Handler();
   }

@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "toNTN.h"
-
+#include "lora_cfg.h"
 static RadioEvents_t RadioEvents;
 
 static uint8_t rxBuf[256];
@@ -53,16 +53,17 @@ static void OnRxError(void)
     Radio.Rx(0);
 }
 
+
+
 void LoraRx_Init(void)
 {
     memset(&RadioEvents, 0, sizeof(RadioEvents));
-    RadioEvents.RxDone = OnRxDone;
+    RadioEvents.RxDone    = OnRxDone;
     RadioEvents.RxTimeout = OnRxTimeout;
-    RadioEvents.RxError = OnRxError;
+    RadioEvents.RxError   = OnRxError;
 
     Radio.Init(&RadioEvents);
 
-    // 你的模块 DIO2 内部接RF开关 → 必须打开
     SX126xSetDio2AsRfSwitchCtrl(true);
 
     // 必须和 TX 一模一样
@@ -71,7 +72,7 @@ void LoraRx_Init(void)
     // RX 参数必须匹配 TX：BW125 / SF7 / CR4/5 / CRC ON / 显式头
     // 下面参数是 Semtech 常见格式（如果你的库枚举不同，我们再按编译通过的来调）
     Radio.SetRxConfig(MODEM_LORA,
-                      1,      // BW125k（有的库是0，有的库是1；若收不到再对照你的枚举）
+                      1,      // BW250k（有的库是0，有的库是1；若收不到再对照你的枚举）
                       7,      // SF7
                       1,      // CR4/5
                       0,      // AFC (FSK用，LoRa填0)
@@ -89,6 +90,10 @@ void LoraRx_Init(void)
     Radio.Rx(0); // continuous RX
 }
 
+
+
+
+
 void LoraRx_Process(void)
 {
 	if (g_lora_irq_pending)
@@ -102,3 +107,33 @@ void LoraRx_Process(void)
 	        Radio.IrqProcess();
 	    }
 }
+
+void Radio_ApplyLoraConfig(const LoraConfig *cfg)
+{
+    // 1. 频率
+    Radio.SetChannel(cfg->freq);
+
+    // 2. 网络类型（public/private syncword）
+    Radio.SetPublicNetwork(cfg->publicNetwork);
+
+
+
+    // 4. RX 参数
+    Radio.SetRxConfig(
+        MODEM_LORA,
+        cfg->bandwidth,
+        cfg->spreading,
+        cfg->coderate,
+        0,                  // AFC (unused)
+        cfg->preambleLen,
+        0,                  // symbTimeout
+        false,              // fixLen
+        0,                  // payloadLen
+        cfg->crcOn,
+        false,              // freqHop
+        0,
+        cfg->iqInverted,
+        true
+    );
+}
+

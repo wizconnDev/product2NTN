@@ -1,0 +1,16 @@
+../Modules/ExtFlash/ntn_config.c:35:13:default_cfg	1
+../Modules/ExtFlash/ntn_config.c:50:17:calc_crc	1
+../Modules/ExtFlash/ntn_config.c:56:12:cfg_valid	4
+../Modules/ExtFlash/ntn_config.c:69:28:NTN_Config_OnSaved	1
+../Modules/ExtFlash/ntn_config.c:74:6:NTN_Config_Init	3
+../Modules/ExtFlash/ntn_config.c:103:18:NTN_Config_Get	1
+../Modules/ExtFlash/ntn_config.c:108:6:NTN_Config_ResetDefault	1
+../Modules/ExtFlash/ntn_config.c:114:5:NTN_Config_Save	5
+../Modules/ExtFlash/ntn_config.c:146:12:strieq	8
+../Modules/ExtFlash/ntn_config.c:157:13:trim_space	6
+../Modules/ExtFlash/ntn_config.c:169:20:skip_word	5
+../Modules/ExtFlash/ntn_config.c:178:17:bw_to_khz	5
+../Modules/ExtFlash/ntn_config.c:189:20:cr_to_str	7
+../Modules/ExtFlash/ntn_config.c:203:20:onoff	2
+../Modules/ExtFlash/ntn_config.c:208:20:pubnet_str	2
+../Modules/ExtFlash/ntn_config.c:215:5:NTN_Config_ProcessLine	44

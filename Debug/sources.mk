@@ -26,6 +26,7 @@ Core/LoraSDK \
 Core/Src \
 Core/Startup \
 Drivers/STM32L0xx_HAL_Driver/Src \
+Modules/ExtFlash \
 Modules/Lora \
 Modules/RS485 \
 Modules/toNTN \

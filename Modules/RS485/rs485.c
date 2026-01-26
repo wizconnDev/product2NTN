@@ -195,6 +195,8 @@ static const uint8_t CMD_WIND_SPEED[] = { 0x01,0x03,0x00,0x00,0x00,0x01,0x84,0x0
 void RS485_UART_Init(void)
 {
     HAL_UART_Receive_IT(&huart2, &rs485_rx_byte, 1);
+    HAL_UART_Transmit(&hlpuart1, (uint8_t*)"RS485 UART2 IT ON\r\n", 19, 100);
+
 }
 
 // 发一条风速查询命令，启动接收窗口
@@ -214,8 +216,12 @@ void RS485_WindQuery_Start(void)
 }
 
 // 在 USART2 的 HAL_UART_RxCpltCallback 分支里调用
+
+volatile uint32_t g_u2_rx_cnt = 0;
 void RS485_UART_RxHandler(void)
 {
+
+	  g_u2_rx_cnt++;
     if (!wind_active) {
         // 即便没在“窗口期”，也不要乱写缓冲，直接丢弃
         return;

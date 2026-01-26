@@ -32,4 +32,6 @@ void NTN_SendTest(void);   // 如果 main.c 要直接调的话
 int NTN_Send_Payload_WithSrc(uint8_t src, const uint8_t *data, uint16_t len);
 extern volatile int g_ntn_hello_done ;
 void NTN_Invalidate_UserSock_AndCfg(const char* reason);
+void NTN_FlushLoRaQueue(void);
+int NTN_EnqueueLoRa(const uint8_t *data, uint16_t len);
 #endif
