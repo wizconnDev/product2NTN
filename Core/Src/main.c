@@ -238,7 +238,7 @@ int main(void)
 	      }
 
 
-	      // C) 第一步：拉配置（cfg_ready==0 才拉）
+	       //C) 第一步：拉配置（cfg_ready==0 才拉）
 	 	     if (g_ntn_cfg_ready == 0 && HAL_GetTick() >= next_try_tick)
 	 	     {
 	 	         g_ntn_cfg_ready  = 0;
@@ -250,7 +250,7 @@ int main(void)
 	 	         if (g_ntn_cfg_ready)
 	 	         {
 	 	             printf("[MAIN] immediate HELLO after CFG\r\n");
-
+	 	             HAL_Delay(1500);
 	 	             int ok = NTN_SendHelloUsingCfg();
 	 	             printf("[MAIN] HELLO result = %d\r\n", ok);
 
@@ -272,11 +272,11 @@ int main(void)
 
 
 	      // D) 第二步：cfg_ready 之后发 hello
-	 	    // D) cfg_ready 之后发 hello：cfg ready 立刻尝试一次，失败再每 5s 重试
+	 	   //  D) cfg_ready 之后发 hello：cfg ready 立刻尝试一次，失败再每 5s 重试
 	 	    static uint32_t last_hello_try = 0;
 	 	    static uint8_t  hello_tried_once_after_cfg = 0;   // 0=还没在本轮cfg ready后尝试过
 
-	 	    // 如果 cfg 失效了，要把一次性标志复位
+	 	   // 如果 cfg 失效了，要把一次性标志复位
 	 	    if (!g_ntn_cfg_ready) {
 	 	        hello_tried_once_after_cfg = 0;
 	 	    }
@@ -287,7 +287,7 @@ int main(void)
 
 	 	        int should_try = 0;
 
-	 	        // ✅ 1) cfg ready 后，立刻尝试一次（不等 5s）
+	 	       //  ✅ 1) cfg ready 后，立刻尝试一次（不等 5s）
 	 	        if (!hello_tried_once_after_cfg) {
 	 	            should_try = 1;
 	 	            hello_tried_once_after_cfg = 1;
@@ -314,10 +314,10 @@ int main(void)
 	 	                last_hello_try = 0;
 	 	            }
 	 	            else
-	 	            {
+	 	           {
 	 	                // ✅ 如果 hello 失败，建议让系统重新拉 cfg（尤其遇到 CME8002/timeout）
 	 	                // 如果你的 NTN_SendHelloUsingCfg 内部已经会把 cfg_ready=0，那这里不会重复影响
-	 	                g_ntn_cfg_ready = 0;
+	 	               g_ntn_cfg_ready = 0;
 	 	                // 同时也可以确保复用 socket 不再被使用（保险）
 	 	               NTN_Invalidate_UserSock_AndCfg("[MAIN] HELLO failed -> invalidate cfg");
 

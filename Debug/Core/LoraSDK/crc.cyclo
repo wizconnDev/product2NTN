@@ -1,2 +1,2 @@
 ../Core/LoraSDK/crc.c:4:10:ComputeCrc	3
-../Core/LoraSDK/crc.c:25:10:RadioComputeCRC	5
+../Core/LoraSDK/crc.c:25:10:RadioComputeCRC	4

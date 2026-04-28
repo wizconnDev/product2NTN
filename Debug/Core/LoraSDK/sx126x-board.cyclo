@@ -1,9 +1,8 @@
 ../Core/LoraSDK/sx126x-board.c:18:20:NSS_L	1
 ../Core/LoraSDK/sx126x-board.c:19:20:NSS_H	1
-../Core/LoraSDK/sx126x-board.c:21:6:HAL_Delay_nMS	1
 ../Core/LoraSDK/sx126x-board.c:26:16:SpiReadWrite	1
-../Core/LoraSDK/sx126x-board.c:33:13:SpiWrite	1
 ../Core/LoraSDK/sx126x-board.c:38:13:SpiRead	2
+../Core/LoraSDK/sx126x-board.c:21:6:HAL_Delay_nMS	1
 ../Core/LoraSDK/sx126x-board.c:47:6:SX126xReset	1
 ../Core/LoraSDK/sx126x-board.c:56:6:SX126xWaitOnBusy	3
 ../Core/LoraSDK/sx126x-board.c:65:6:SX126xWakeup	1

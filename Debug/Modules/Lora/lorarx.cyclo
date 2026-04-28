@@ -1,7 +1,7 @@
-../Modules/Lora/lorarx.c:14:6:LoraRx_IrqNotify	1
-../Modules/Lora/lorarx.c:19:13:OnRxDone	3
-../Modules/Lora/lorarx.c:43:13:OnRxTimeout	1
 ../Modules/Lora/lorarx.c:49:13:OnRxError	1
+../Modules/Lora/lorarx.c:43:13:OnRxTimeout	1
+../Modules/Lora/lorarx.c:19:13:OnRxDone	3
+../Modules/Lora/lorarx.c:14:6:LoraRx_IrqNotify	1
 ../Modules/Lora/lorarx.c:58:6:LoraRx_Init	1
 ../Modules/Lora/lorarx.c:97:6:LoraRx_Process	2
 ../Modules/Lora/lorarx.c:111:6:Radio_ApplyLoraConfig	1

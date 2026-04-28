@@ -37,3 +37,4 @@
 "./Modules/RS485/rs485.o"
 "./Modules/toNTN/debug.o"
 "./Modules/toNTN/toNTN.o"
+"./Modules/toNTN/toNTNsatellite.o"

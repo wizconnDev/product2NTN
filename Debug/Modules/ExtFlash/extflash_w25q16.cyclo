@@ -7,5 +7,4 @@
 ../Modules/ExtFlash/extflash_w25q16.c:77:5:ExtFlash_ReadJedecId	3
 ../Modules/ExtFlash/extflash_w25q16.c:93:5:ExtFlash_Read	3
 ../Modules/ExtFlash/extflash_w25q16.c:108:5:ExtFlash_Erase4K	5
-../Modules/ExtFlash/extflash_w25q16.c:127:12:PageProgram	7
-../Modules/ExtFlash/extflash_w25q16.c:147:5:ExtFlash_Write	4
+../Modules/ExtFlash/extflash_w25q16.c:147:5:ExtFlash_Write	8

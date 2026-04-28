@@ -3,6 +3,7 @@
 #include "usart.h"      // 为了用 hlpuart1 打调试信息
 #include <string.h>
 #include <stdint.h>
+#include <stdio.h>
 // ================== 旧 RS485 逻辑，先“冷冻”起来 ==================
 #if 0
 // ===== ultra-min 三段式：RS485 weather station Uart =====
@@ -188,8 +189,52 @@ static uint16_t wind_idx       = 0;
 uint8_t  wind_active    = 0;
 static uint32_t wind_deadline  = 0;
 
+// ===== 百叶箱（地址贴纸=11 -> 0x0B）=====
+#define BYH_SLAVE        0x0B
+#define BYH_START_REG    500     // 0x01F4
+#define BYH_REG_COUNT    8       // 500~507
+
+// ===== Soil=====
+#define SOIL_SLAVE      0x03
+#define SOIL_START_REG  0x0000
+#define SOIL_REG_COUNT  2
+
+static uint16_t modbus_crc16(const uint8_t *buf, uint16_t len)
+{
+    uint16_t crc = 0xFFFF;
+    for (uint16_t i = 0; i < len; i++) {
+        crc ^= buf[i];
+        for (uint8_t j = 0; j < 8; j++) {
+            if (crc & 0x0001) crc = (crc >> 1) ^ 0xA001;
+            else              crc = (crc >> 1);
+        }
+    }
+    return crc;
+}
+
+static uint16_t modbus_build_read03(uint8_t slave, uint16_t startReg, uint16_t regCount, uint8_t out[8])
+{
+    out[0] = slave;
+    out[1] = 0x03;
+    out[2] = (uint8_t)(startReg >> 8);
+    out[3] = (uint8_t)(startReg & 0xFF);
+    out[4] = (uint8_t)(regCount >> 8);
+    out[5] = (uint8_t)(regCount & 0xFF);
+
+    uint16_t crc = modbus_crc16(out, 6);
+    out[6] = (uint8_t)(crc & 0xFF);  // CRC Lo
+    out[7] = (uint8_t)(crc >> 8);    // CRC Hi
+    return 8;
+}
+
+
+
 // 可以先只用“风速”命令，后面再扩展成 i = 0..4 轮询
 static const uint8_t CMD_WIND_SPEED[] = { 0x01,0x03,0x00,0x00,0x00,0x01,0x84,0x0A };
+static const uint8_t CMD_WIND_DIR[]   = { 0x02,0x03,0x00,0x00,0x00,0x02,0xC4,0x38 };
+
+static uint8_t g_poll_i = 0;
+static uint8_t g_last_slave = 0x00;
 
 // 初始化：启动 USART2 中断接收
 void RS485_UART_Init(void)
@@ -201,18 +246,40 @@ void RS485_UART_Init(void)
 
 // 发一条风速查询命令，启动接收窗口
 void RS485_WindQuery_Start(void)
-{
-    if (wind_active) return;  // 上一帧还没结束就不再发
+{    if (wind_active) return;
 
-    wind_idx      = 0;
-    wind_active   = 1;
-    wind_deadline = HAL_GetTick() + RS485_RX_TOTAL_MS;
+wind_idx      = 0;
+wind_active   = 1;
+wind_deadline = HAL_GetTick() + RS485_RX_TOTAL_MS;
 
-    // 直接通过 USART2 发命令
-    HAL_UART_Transmit(&huart2,
-                      (uint8_t*)CMD_WIND_SPEED,
-                      sizeof(CMD_WIND_SPEED),
-                      HAL_MAX_DELAY);
+if (g_poll_i == 0)
+    {
+        g_last_slave = 0x01;
+        HAL_UART_Transmit(&huart2, (uint8_t*)CMD_WIND_SPEED, sizeof(CMD_WIND_SPEED), HAL_MAX_DELAY);
+    }
+    else if (g_poll_i == 1)
+    {
+        g_last_slave = 0x02;
+        HAL_UART_Transmit(&huart2, (uint8_t*)CMD_WIND_DIR, sizeof(CMD_WIND_DIR), HAL_MAX_DELAY);
+    }
+    else if (g_poll_i == 2)
+    {
+        // ✅ 土壤温湿度：地址=3，读 0x0000 起 2 个寄存器
+        uint8_t req[8];
+        uint16_t n = modbus_build_read03(SOIL_SLAVE, SOIL_START_REG, SOIL_REG_COUNT, req);
+        g_last_slave = SOIL_SLAVE;
+        HAL_UART_Transmit(&huart2, req, n, HAL_MAX_DELAY);
+    }
+    else
+    {
+        // ✅ 新增：百叶箱一次读 500~507,实际上只读5个
+        uint8_t req[8];
+        uint16_t n = modbus_build_read03(BYH_SLAVE, BYH_START_REG, BYH_REG_COUNT, req);
+        g_last_slave = BYH_SLAVE;
+        HAL_UART_Transmit(&huart2, req, n, HAL_MAX_DELAY);
+    }
+
+    g_poll_i = (g_poll_i + 1) % 4;
 }
 
 // 在 USART2 的 HAL_UART_RxCpltCallback 分支里调用
@@ -232,6 +299,7 @@ void RS485_UART_RxHandler(void)
         wind_buf[wind_idx++] = rs485_rx_byte;
     }
     // 不在这里判断结束，只是收；结束用超时在 Poll 里判
+
 }
 
 // 轮询：到了超时时间，把一帧数据转发给 NTN
@@ -250,9 +318,11 @@ void RS485_WindQuery_Poll(void)
 
     if (length == 0)
     {
-        const char *msg = "RS485: <timeout, no data>\r\n";
-        HAL_UART_Transmit(&hlpuart1, (uint8_t*)msg, strlen(msg), 100);
-        return;
+    	 const char *msg = (g_last_slave == 0x01) ? "RS485 S01 <timeout>\r\n" :
+    	                      (g_last_slave == 0x02) ? "RS485 S02 <timeout>\r\n" :
+    	                                              "RS485 <timeout>\r\n";
+    	    HAL_UART_Transmit(&hlpuart1, (uint8_t*)msg, strlen(msg), 100);
+    	    return;
     }
 
     // 打印 HEX 看一眼收到什么
@@ -262,10 +332,17 @@ void RS485_WindQuery_Poll(void)
     {
         pos += snprintf(&line[pos], sizeof(line) - pos, "%02X ", wind_buf[k]);
     }
-    const char *prefix = "RX(485): ";
+    const char *prefix = (g_last_slave == 0x01) ? "RX(485 S01 SPEED): " :
+                         (g_last_slave == 0x02) ? "RX(485 S02 DIR): "   :
+                         (g_last_slave == SOIL_SLAVE) ? "RX(485 SOIL 0-1): " :
+                         (g_last_slave == BYH_SLAVE) ? "RX(485 BYH 500-507): " :
+                          "RX(485): ";
     HAL_UART_Transmit(&hlpuart1, (uint8_t*)prefix, strlen(prefix), 100);
+
     HAL_UART_Transmit(&hlpuart1, (uint8_t*)line, strlen(line), 100);
     HAL_UART_Transmit(&hlpuart1, (uint8_t*)"\r\n", 2, 100);
+
+
 
     // 直接把这帧原始 RS485 数据丢给 NTN（后面可以再解析 Modbus 再拼 JSON）
     if (g_ntn_cfg_ready)
